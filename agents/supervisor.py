@@ -17,21 +17,25 @@ from api.settings import settings
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are SaborAI, an intelligent food assistant specialized in
-analyzing restaurant menus. You have access to three specialist agents:
+SYSTEM_PROMPT = """Voce e o SaborAI, um assistente inteligente de alimentacao
+especializado em analisar cardapios de restaurantes. Voce tem acesso a tres
+agentes especialistas:
 
-1. NutritionAgent  – handles dietary restrictions, allergies, caloric info.
-2. RecommendationAgent – builds personalized combos and suggests dishes by
-   budget, preference or occasion.
-3. QualityAgent – evaluates menu description quality and suggests improvements
-   to boost conversion and clarity.
+1. NutritionAgent  – restricoes alimentares, alergias, info calorica.
+2. RecommendationAgent – combos personalizados, sugestoes por orcamento,
+   preferencia ou ocasiao.
+3. QualityAgent – avalia qualidade das descricoes e sugere melhorias de
+   conversao e clareza.
 
-Read the user's query, aggregate the specialist agents' responses and deliver
-a clear, structured final answer.
+Leia a consulta do usuario, agregue as respostas dos agentes especialistas e
+entregue uma resposta final clara e estruturada.
 
-IMPORTANT:
-- Use plain text only. Do NOT use markdown formatting (no **, no ##, no *).
-- Always respond in the same language the user used.
+REGRAS OBRIGATORIAS:
+- Use texto puro. NAO use formatacao markdown (nada de **, ##, *).
+- SEMPRE responda em portugues brasileiro, independentemente do idioma da
+  consulta ou das respostas dos agentes.
+- Se um agente retornou erro ou nao teve dados, informe ao usuario de forma
+  amigavel que ele precisa primeiro ingerir um cardapio antes de consultar.
 """
 
 ROUTING_PROMPT = """Given the user query below, output ONLY a JSON array with
@@ -89,7 +93,11 @@ class SupervisorAgent:
 
         agent_outputs: dict[str, str] = {}
         for name in selected:
-            agent_outputs[name] = self.agents[name].run(query, menu_name)
+            try:
+                agent_outputs[name] = self.agents[name].run(query, menu_name)
+            except Exception as exc:
+                logger.error("Agent '%s' failed: %s", name, exc)
+                agent_outputs[name] = f"[Erro no agente {name}: {exc}]"
 
         # Consolidate
         consolidation_input = "\n\n".join(
@@ -99,9 +107,9 @@ class SupervisorAgent:
             SystemMessage(content=SYSTEM_PROMPT),
             HumanMessage(
                 content=(
-                    f"User query: {query}\n\n"
-                    f"Specialist agents outputs:\n{consolidation_input}\n\n"
-                    "Now write the final consolidated response to the user."
+                    f"Consulta do usuario: {query}\n\n"
+                    f"Respostas dos agentes especialistas:\n{consolidation_input}\n\n"
+                    "Agora escreva a resposta final consolidada para o usuario em portugues."
                 )
             ),
         ]

@@ -165,6 +165,7 @@ with tab_menu:
                         result = ingest_file(tmp_path, menu_name)
                         Path(tmp_path).unlink(missing_ok=True)
 
+                        st.session_state["ingested_menu"] = menu_name
                         st.success(
                             f"Cardápio **{result['menu_name']}** ingerido com sucesso! "
                             f"**{result['total_chunks']}** chunks criados."
@@ -190,6 +191,7 @@ with tab_menu:
                         from ingestion.pipeline import ingest_text
 
                         result = ingest_text(menu_text, menu_name)
+                        st.session_state["ingested_menu"] = menu_name
                         st.success(
                             f"Cardápio **{result['menu_name']}** ingerido com sucesso! "
                             f"**{result['total_chunks']}** chunks criados."
@@ -217,6 +219,7 @@ with tab_menu:
 
         st.markdown("**Exemplos rápidos:**")
         example_cols = st.columns(2)
+        selected_example = None
         for i, (icon, ex) in enumerate(example_queries):
             with example_cols[i % 2]:
                 if st.button(
@@ -224,39 +227,48 @@ with tab_menu:
                     key=f"ex_{i}",
                     use_container_width=True,
                 ):
-                    query = ex
+                    selected_example = ex
 
-        if st.button(
+        send_clicked = st.button(
             "🚀 Enviar Consulta",
             type="primary",
-            disabled=not query,
+            disabled=not query and not selected_example,
             use_container_width=True,
-        ):
-            with st.spinner("Consultando agentes especializados..."):
-                try:
-                    from agents.supervisor import SupervisorAgent
+        )
 
-                    supervisor = SupervisorAgent()
-                    result = supervisor.run(query)
+        effective_query = selected_example or query
 
-                    st.markdown("---")
-                    st.markdown("#### 💬 Resposta")
-                    st.markdown(result["response"])
+        if send_clicked or selected_example:
+            if not effective_query:
+                st.warning("Digite uma pergunta ou selecione um exemplo.")
+            else:
+                with st.spinner("Consultando agentes especializados..."):
+                    try:
+                        from agents.supervisor import SupervisorAgent
 
-                    agents_used = result["agents_used"]
-                    badges = " ".join(f'<span class="status-badge">{a}</span>' for a in agents_used)
-                    st.markdown(
-                        f"**Agentes utilizados:** {badges}",
-                        unsafe_allow_html=True,
-                    )
+                        active_menu = st.session_state.get("ingested_menu")
+                        supervisor = SupervisorAgent()
+                        result = supervisor.run(effective_query, menu_name=active_menu)
 
-                    with st.expander("Ver detalhes por agente"):
-                        for agent_name, output in result.get("agent_outputs", {}).items():
-                            st.markdown(f"**{agent_name.upper()}**")
-                            st.markdown(output)
-                            st.markdown("---")
-                except Exception as e:
-                    st.error(f"Erro na consulta: {e}")
+                        st.markdown("---")
+                        st.markdown("#### 💬 Resposta")
+                        st.info(result["response"])
+
+                        agents_used = result["agents_used"]
+                        badges = " ".join(
+                            f'<span class="status-badge">{a}</span>' for a in agents_used
+                        )
+                        st.markdown(
+                            f"**Agentes utilizados:** {badges}",
+                            unsafe_allow_html=True,
+                        )
+
+                        with st.expander("Ver detalhes por agente"):
+                            for agent_name, output in result.get("agent_outputs", {}).items():
+                                st.markdown(f"**{agent_name.upper()}**")
+                                st.info(output)
+                    except Exception as e:
+                        st.error(f"Erro na consulta: {e}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
