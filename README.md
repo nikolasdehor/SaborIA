@@ -2,7 +2,7 @@
 
 > Sistema multi-agente com RAG para analise inteligente de cardapios de restaurantes.
 
-[![CI](https://github.com/YOUR_USERNAME/saborai/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/saborai/actions)
+[![CI](https://github.com/nikolasdehor/CardapIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/CardapIA/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3-purple.svg)](https://langchain.com)
@@ -121,8 +121,8 @@ Documentacao interativa disponivel em `http://localhost:8000/docs` (Swagger UI).
 ### 1. Clone e configure
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/saborai.git
-cd saborai
+git clone https://github.com/nikolasdehor/CardapIA.git
+cd CardapIA
 cp .env.example .env
 # Adicione sua OPENAI_API_KEY no .env
 ```
