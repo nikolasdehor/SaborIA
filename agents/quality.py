@@ -5,7 +5,7 @@ to boost conversion, clarity and SEO on delivery platforms.
 
 from __future__ import annotations
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
 from api.settings import settings
@@ -27,7 +27,15 @@ Then provide:
 - Items most at risk of low conversion and why.
 
 Be direct, actionable and data-driven.
+Always respond in the same language the user used.
 """
+
+
+def _build_prompt(system: str):
+    from langchain.prompts import PromptTemplate
+
+    template = f"{system}\n\nContext:\n{{context}}\n\nQuestion: {{question}}\n\nAnswer:"
+    return PromptTemplate(input_variables=["context", "question"], template=template)
 
 
 class QualityAgent:
@@ -40,18 +48,14 @@ class QualityAgent:
 
     def run(self, query: str, menu_name: str | None = None) -> str:
         retriever = get_retriever(menu_name)
-        docs = retriever.invoke(query)
-        context = "\n\n".join(d.page_content for d in docs)
-
-        messages = [
-            SystemMessage(content=SYSTEM),
-            HumanMessage(
-                content=(
-                    f"Menu content:\n{context}\n\n"
-                    f"User request: {query}\n\n"
-                    "Provide your quality evaluation:"
-                )
-            ),
-        ]
-        response = self.llm.invoke(messages)
-        return response.content
+        chain = RetrievalQA.from_chain_type(
+            llm=self.llm,
+            chain_type="stuff",
+            retriever=retriever,
+            chain_type_kwargs={
+                "verbose": False,
+                "prompt": _build_prompt(SYSTEM),
+            },
+        )
+        result = chain.invoke({"query": query})
+        return result["result"]

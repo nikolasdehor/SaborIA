@@ -16,6 +16,7 @@ menu context provided, help users by:
 - Pairing suggestions
 
 Format combos clearly with item names and prices when available.
+Always respond in the same language the user used.
 """
 
 

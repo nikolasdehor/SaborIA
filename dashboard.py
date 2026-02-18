@@ -18,12 +18,90 @@ import streamlit as st
 
 RESULTS_DIR = Path("data/eval_results")
 
+# ── Page Config ───────────────────────────────────────────────────────────────
+
 st.set_page_config(page_title="SaborAI", page_icon="🍽️", layout="wide")
 
-st.title("SaborAI")
-st.markdown("Sistema multi-agente com RAG para analise inteligente de cardapios.")
+# ── Custom CSS ────────────────────────────────────────────────────────────────
 
-tab_menu, tab_evals = st.tabs(["Cardapio & Consultas", "Avaliacoes (Evals)"])
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FF4B4B 0%, #FF8E53 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0;
+    }
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: #9CA3AF;
+        margin-top: 0;
+    }
+
+    div[data-testid="stMetric"] {
+        background: linear-gradient(135deg, #1A1D23 0%, #22262E 100%);
+        border: 1px solid #2D3139;
+        border-radius: 12px;
+        padding: 16px 20px;
+    }
+    div[data-testid="stMetric"] label {
+        color: #9CA3AF !important;
+        font-size: 0.85rem;
+    }
+
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: rgba(59, 130, 246, 0.15);
+        color: #3B82F6;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .stButton > button {
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .section-sep {
+        border-top: 1px solid #2D3139;
+        margin: 2rem 0;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ── Header ────────────────────────────────────────────────────────────────────
+
+st.markdown('<p class="hero-title">SaborAI</p>', unsafe_allow_html=True)
+st.markdown(
+    '<p class="hero-subtitle">'
+    "Sistema multi-agente com RAG para análise inteligente de cardápios"
+    "</p>",
+    unsafe_allow_html=True,
+)
+
+tab_menu, tab_evals = st.tabs(["🍽️ Cardápio & Consultas", "📊 Avaliações (Evals)"])
+
+CHART_COLORS = ["#FF4B4B", "#FF8E53", "#3B82F6", "#10B981", "#A78BFA"]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -31,30 +109,38 @@ tab_menu, tab_evals = st.tabs(["Cardapio & Consultas", "Avaliacoes (Evals)"])
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_menu:
-    col_upload, col_query = st.columns([1, 1])
+    col_upload, col_query = st.columns([1, 1], gap="large")
 
     # ── Upload / Ingest ───────────────────────────────────────────────────
     with col_upload:
-        st.header("Ingerir Cardapio")
-        st.markdown("Suba um arquivo PDF ou TXT de cardapio para o sistema analisar.")
+        st.markdown("### 📤 Ingerir Cardápio")
+        st.caption("Suba um arquivo PDF ou TXT de cardápio para o sistema analisar.")
 
         upload_method = st.radio(
-            "Metodo de entrada",
-            ["Upload de arquivo (PDF/TXT)", "Colar texto"],
+            "Método de entrada",
+            ["📁 Upload de arquivo (PDF/TXT)", "📋 Colar texto"],
             horizontal=True,
         )
 
-        menu_name = st.text_input("Nome do restaurante", placeholder="Ex: Bella Terra")
+        menu_name = st.text_input(
+            "Nome do restaurante",
+            placeholder="Ex: Bella Terra",
+        )
 
-        if upload_method == "Upload de arquivo (PDF/TXT)":
+        if upload_method.startswith("📁"):
             uploaded_file = st.file_uploader(
-                "Arraste ou selecione o cardapio",
+                "Arraste ou selecione o cardápio",
                 type=["pdf", "txt"],
             )
 
             can_ingest = uploaded_file and menu_name
-            if st.button("Ingerir Cardapio", type="primary", disabled=not can_ingest):
-                with st.spinner("Processando cardapio..."):
+            if st.button(
+                "🚀 Ingerir Cardápio",
+                type="primary",
+                disabled=not can_ingest,
+                use_container_width=True,
+            ):
+                with st.spinner("Processando cardápio..."):
                     try:
                         from ingestion.pipeline import ingest_file
 
@@ -67,73 +153,95 @@ with tab_menu:
                         Path(tmp_path).unlink(missing_ok=True)
 
                         st.success(
-                            f"Cardapio **{result['menu_name']}** ingerido! "
-                            f"{result['total_chunks']} chunks criados."
+                            f"Cardápio **{result['menu_name']}** ingerido com sucesso! "
+                            f"**{result['total_chunks']}** chunks criados."
                         )
                     except Exception as e:
-                        st.error(f"Erro na ingestao: {e}")
+                        st.error(f"Erro na ingestão: {e}")
 
         else:
             menu_text = st.text_area(
-                "Cole o texto do cardapio",
+                "Cole o texto do cardápio",
                 height=200,
-                placeholder="ENTRADAS\nSalada Caesar R$25...",
+                placeholder="ENTRADAS\nSalada Caesar — R$25\nBruschetta — R$18\n...",
             )
 
-            if st.button("Ingerir Texto", type="primary", disabled=not menu_text or not menu_name):
+            if st.button(
+                "🚀 Ingerir Texto",
+                type="primary",
+                disabled=not menu_text or not menu_name,
+                use_container_width=True,
+            ):
                 with st.spinner("Processando texto..."):
                     try:
                         from ingestion.pipeline import ingest_text
 
                         result = ingest_text(menu_text, menu_name)
                         st.success(
-                            f"Cardapio **{result['menu_name']}** ingerido! "
-                            f"{result['total_chunks']} chunks criados."
+                            f"Cardápio **{result['menu_name']}** ingerido com sucesso! "
+                            f"**{result['total_chunks']}** chunks criados."
                         )
                     except Exception as e:
-                        st.error(f"Erro na ingestao: {e}")
+                        st.error(f"Erro na ingestão: {e}")
 
     # ── Query ─────────────────────────────────────────────────────────────
     with col_query:
-        st.header("Consultar Cardapio")
-        st.markdown("Faca perguntas sobre o cardapio ingerido.")
+        st.markdown("### 🔍 Consultar Cardápio")
+        st.caption("Faça perguntas sobre o cardápio ingerido.")
 
         query = st.text_area(
             "Sua pergunta",
             height=100,
-            placeholder="Ex: Monte um combo vegano por ate R$60 para um casal.",
+            placeholder="Ex: Monte um combo vegano por até R$60 para um casal.",
         )
 
         example_queries = [
-            "Quais pratos sao adequados para veganos?",
-            "Monte um combo completo por ate R$60 para um casal.",
-            "Avalie a qualidade das descricoes do cardapio e sugira melhorias.",
-            "Quais pratos nao contem gluten nem laticinios?",
+            ("🌱", "Quais pratos são adequados para veganos?"),
+            ("💰", "Monte um combo completo por até R$60 para um casal."),
+            ("✨", "Avalie a qualidade das descrições e sugira melhorias."),
+            ("🚫", "Quais pratos não contêm glúten nem laticínios?"),
         ]
 
-        st.markdown("**Exemplos rapidos:**")
+        st.markdown("**Exemplos rápidos:**")
         example_cols = st.columns(2)
-        for i, ex in enumerate(example_queries):
+        for i, (icon, ex) in enumerate(example_queries):
             with example_cols[i % 2]:
-                if st.button(ex[:50] + "...", key=f"ex_{i}", use_container_width=True):
+                if st.button(
+                    f"{icon} {ex[:45]}...",
+                    key=f"ex_{i}",
+                    use_container_width=True,
+                ):
                     query = ex
 
-        if st.button("Enviar Consulta", type="primary", disabled=not query):
-            with st.spinner("Consultando agentes..."):
+        if st.button(
+            "🚀 Enviar Consulta",
+            type="primary",
+            disabled=not query,
+            use_container_width=True,
+        ):
+            with st.spinner("Consultando agentes especializados..."):
                 try:
                     from agents.supervisor import SupervisorAgent
 
                     supervisor = SupervisorAgent()
                     result = supervisor.run(query)
 
-                    st.subheader("Resposta")
+                    st.markdown("---")
+                    st.markdown("#### 💬 Resposta")
                     st.markdown(result["response"])
 
-                    with st.expander("Detalhes da execucao"):
-                        st.markdown(f"**Agentes utilizados:** {', '.join(result['agents_used'])}")
+                    agents_used = result["agents_used"]
+                    badges = " ".join(f'<span class="status-badge">{a}</span>' for a in agents_used)
+                    st.markdown(
+                        f"**Agentes utilizados:** {badges}",
+                        unsafe_allow_html=True,
+                    )
+
+                    with st.expander("Ver detalhes por agente"):
                         for agent_name, output in result.get("agent_outputs", {}).items():
-                            st.markdown(f"---\n**{agent_name.upper()}:**")
-                            st.markdown(output[:500])
+                            st.markdown(f"**{agent_name.upper()}**")
+                            st.markdown(output)
+                            st.markdown("---")
                 except Exception as e:
                     st.error(f"Erro na consulta: {e}")
 
@@ -143,7 +251,6 @@ with tab_menu:
 # ══════════════════════════════════════════════════════════════════════════════
 
 with tab_evals:
-    # ── Data Loading ─────────────────────────────────────────────────────
 
     @st.cache_data(ttl=30)
     def load_eval_results() -> list[dict]:
@@ -192,14 +299,14 @@ with tab_evals:
             scores = case.get("scores", {})
             rows.append(
                 {
-                    "Case ID": case["id"],
+                    "Caso": case["id"],
                     "Query": case["query"][:80],
-                    "Agents Used": ", ".join(case.get("agents_used", [])),
-                    "Latency (ms)": case.get("latency_ms", 0),
-                    "Relevance": _extract_score(scores.get("relevance", 0)),
-                    "Groundedness": _extract_score(scores.get("groundedness", 0)),
-                    "Routing Acc.": scores.get("routing_accuracy", 0),
-                    "Keyword Cov.": scores.get("keyword_coverage", 0),
+                    "Agentes": ", ".join(case.get("agents_used", [])),
+                    "Latência (ms)": case.get("latency_ms", 0),
+                    "Relevância": _extract_score(scores.get("relevance", 0)),
+                    "Fundamentação": _extract_score(scores.get("groundedness", 0)),
+                    "Roteamento": scores.get("routing_accuracy", 0),
+                    "Cobertura KW": scores.get("keyword_coverage", 0),
                 }
             )
         return pd.DataFrame(rows)
@@ -209,26 +316,27 @@ with tab_evals:
     results = load_eval_results()
 
     if not results:
-        st.warning(
-            "Nenhum resultado de avaliacao encontrado. Rode uma avaliacao pelo botao abaixo."
+        st.info(
+            "Nenhum resultado de avaliação encontrado. "
+            "Ingira um cardápio e rode uma avaliação pelo botão abaixo."
         )
     else:
         latest = results[-1]
         agg = latest["aggregated"]
 
-        st.header("Ultimo Run")
-        st.caption(f"Timestamp: {latest['timestamp']}  |  Cases: {latest['n_cases']}")
+        st.markdown("### 🏆 Último Run")
+        st.caption(f"Timestamp: {latest['timestamp']}  ·  Casos avaliados: {latest['n_cases']}")
 
         cols = st.columns(5)
         metrics = [
-            ("Relevance", "avg_relevance"),
-            ("Groundedness", "avg_groundedness"),
-            ("Routing Acc.", "avg_routing_accuracy"),
-            ("Keyword Cov.", "avg_keyword_coverage"),
-            ("Avg Latency", "avg_latency_ms"),
+            ("Relevância", "avg_relevance", "🎯"),
+            ("Fundamentação", "avg_groundedness", "📌"),
+            ("Roteamento", "avg_routing_accuracy", "🔀"),
+            ("Cobertura KW", "avg_keyword_coverage", "🔑"),
+            ("Latência Média", "avg_latency_ms", "⚡"),
         ]
 
-        for col, (label, key) in zip(cols, metrics):
+        for col, (label, key, icon) in zip(cols, metrics):
             value = agg[key]
             fmt = f"{value:.0f} ms" if "latency" in key else f"{value:.2f}"
 
@@ -237,22 +345,29 @@ with tab_evals:
                 delta = value - prev_value
                 delta_fmt = f"{delta:+.0f} ms" if "latency" in key else f"{delta:+.3f}"
                 delta_color = "inverse" if "latency" in key else "normal"
-                col.metric(label, fmt, delta=delta_fmt, delta_color=delta_color)
+                col.metric(
+                    f"{icon} {label}",
+                    fmt,
+                    delta=delta_fmt,
+                    delta_color=delta_color,
+                )
             else:
-                col.metric(label, fmt)
+                col.metric(f"{icon} {label}", fmt)
+
+        st.markdown('<div class="section-sep"></div>', unsafe_allow_html=True)
 
         # Per-Case Detail
-        st.header("Breakdown por Caso")
+        st.markdown("### 📋 Detalhamento por Caso")
         case_df = cases_to_df(latest)
 
         st.dataframe(
             case_df.style.format(
                 {
-                    "Latency (ms)": "{:.0f}",
-                    "Relevance": "{:.2f}",
-                    "Groundedness": "{:.2f}",
-                    "Routing Acc.": "{:.2f}",
-                    "Keyword Cov.": "{:.2f}",
+                    "Latência (ms)": "{:.0f}",
+                    "Relevância": "{:.2f}",
+                    "Fundamentação": "{:.2f}",
+                    "Roteamento": "{:.2f}",
+                    "Cobertura KW": "{:.2f}",
                 }
             ),
             use_container_width=True,
@@ -260,27 +375,44 @@ with tab_evals:
         )
 
         # Radar chart
-        score_metrics = ["Relevance", "Groundedness", "Routing Acc.", "Keyword Cov."]
+        score_metrics = ["Relevância", "Fundamentação", "Roteamento", "Cobertura KW"]
         fig_radar = go.Figure()
-        for _, row in case_df.iterrows():
+        for idx, (_, row) in enumerate(case_df.iterrows()):
             fig_radar.add_trace(
                 go.Scatterpolar(
                     r=[row[m] for m in score_metrics],
                     theta=score_metrics,
                     fill="toself",
-                    name=row["Case ID"],
+                    name=row["Caso"],
+                    line=dict(color=CHART_COLORS[idx % len(CHART_COLORS)]),
+                    fillcolor=CHART_COLORS[idx % len(CHART_COLORS)],
+                    opacity=0.6,
                 )
             )
         fig_radar.update_layout(
-            polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
-            title="Score Profile por Test Case",
-            height=450,
+            polar=dict(
+                radialaxis=dict(visible=True, range=[0, 1]),
+                bgcolor="rgba(0,0,0,0)",
+            ),
+            title="Perfil de Scores por Caso de Teste",
+            height=480,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#FAFAFA"),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.2,
+                xanchor="center",
+                x=0.5,
+            ),
         )
         st.plotly_chart(fig_radar, use_container_width=True)
 
         # Trends
         if len(results) > 1:
-            st.header("Tendencias")
+            st.markdown('<div class="section-sep"></div>', unsafe_allow_html=True)
+            st.markdown("### 📈 Tendências")
             trend_df = results_to_trends_df(results)
 
             metric_cols = [
@@ -307,11 +439,17 @@ with tab_evals:
                     x="timestamp",
                     y="score",
                     color="metric",
-                    title="Metricas de Qualidade ao Longo do Tempo",
+                    title="Métricas de Qualidade ao Longo do Tempo",
                     markers=True,
+                    color_discrete_sequence=CHART_COLORS,
                 )
                 fig_trend.update_yaxes(range=[0, 1])
-                fig_trend.update_layout(height=400)
+                fig_trend.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#FAFAFA"),
+                )
                 st.plotly_chart(fig_trend, use_container_width=True)
 
             with col_right:
@@ -319,37 +457,43 @@ with tab_evals:
                     trend_df,
                     x="timestamp",
                     y="avg_latency_ms",
-                    title="Latencia Media por Run (ms)",
+                    title="Latência Média por Run (ms)",
+                    color_discrete_sequence=["#FF4B4B"],
                 )
-                fig_latency.update_layout(height=400)
+                fig_latency.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(color="#FAFAFA"),
+                )
                 st.plotly_chart(fig_latency, use_container_width=True)
 
         # History
-        with st.expander("Historico de Runs"):
+        with st.expander("📜 Histórico de Runs"):
             for r in reversed(results):
                 a = r["aggregated"]
                 st.markdown(
                     f"**{r['timestamp']}** — "
-                    f"Rel: {a['avg_relevance']:.2f} | "
-                    f"Gnd: {a['avg_groundedness']:.2f} | "
-                    f"Rout: {a['avg_routing_accuracy']:.2f} | "
-                    f"KW: {a['avg_keyword_coverage']:.2f} | "
+                    f"Rel: {a['avg_relevance']:.2f} · "
+                    f"Fund: {a['avg_groundedness']:.2f} · "
+                    f"Rout: {a['avg_routing_accuracy']:.2f} · "
+                    f"KW: {a['avg_keyword_coverage']:.2f} · "
                     f"Lat: {a['avg_latency_ms']:.0f}ms"
                 )
 
     # Run New Evaluation
-    st.divider()
-    st.header("Rodar Nova Avaliacao")
+    st.markdown('<div class="section-sep"></div>', unsafe_allow_html=True)
+    st.markdown("### 🧪 Rodar Nova Avaliação")
 
-    if st.button("Run Evals", type="primary"):
-        with st.spinner("Rodando suite de avaliacao... Pode levar 1-2 minutos."):
+    if st.button("🚀 Run Evals", type="primary"):
+        with st.spinner("Rodando suite de avaliação... Pode levar 1-2 minutos."):
             try:
                 from evals.runner import run_evals
 
                 report = run_evals()
-                st.success(f"Avaliacao completa! {report['n_cases']} casos avaliados.")
+                st.success(f"Avaliação completa! **{report['n_cases']}** casos avaliados.")
                 st.json(report["aggregated"])
                 st.cache_data.clear()
                 st.rerun()
             except Exception as e:
-                st.error(f"Avaliacao falhou: {e}")
+                st.error(f"Avaliação falhou: {e}")

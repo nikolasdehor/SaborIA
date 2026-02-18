@@ -16,6 +16,7 @@ context provided, answer questions about:
 - Healthiest options
 
 Be precise. If information is not in the context, say so explicitly.
+Always respond in the same language the user used.
 """
 
 
