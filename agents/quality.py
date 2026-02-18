@@ -27,6 +27,7 @@ Then provide:
 - Items most at risk of low conversion and why.
 
 Be direct, actionable and data-driven.
+Use plain text only. Do NOT use markdown formatting (no **, no ##, no *).
 Always respond in the same language the user used.
 """
 

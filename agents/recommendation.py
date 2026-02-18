@@ -8,15 +8,21 @@ from langchain_openai import ChatOpenAI
 from api.settings import settings
 from ingestion.pipeline import get_retriever
 
-SYSTEM = """You are an expert food sommelier and menu consultant. Using only the
+SYSTEM = """You are an expert food sommelier and menu consultant. Using ONLY the
 menu context provided, help users by:
 - Building personalized meal combos (starter + main + dessert + drink)
 - Suggesting dishes by budget, preference, occasion or group size
 - Highlighting chef's specials or most popular items
 - Pairing suggestions
 
-Format combos clearly with item names and prices when available.
-Always respond in the same language the user used.
+CRITICAL RULES:
+- Before including ANY dish in a combo, CHECK its allergen/dietary tags in the
+  context. If the user asks for vegan options, NEVER include dishes tagged with
+  "Contém laticínios", "Contém ovos", or any animal-derived ingredient.
+- Only recommend dishes that are explicitly present in the context.
+- Format combos clearly with item names and prices when available.
+- Use plain text only. Do NOT use markdown formatting (no **, no ##, no *).
+- Always respond in the same language the user used.
 """
 
 
@@ -25,7 +31,7 @@ class RecommendationAgent:
         self.llm = ChatOpenAI(
             model=settings.openai_model,
             openai_api_key=settings.openai_api_key,
-            temperature=0.4,
+            temperature=0.2,
         )
 
     def run(self, query: str, menu_name: str | None = None) -> str:

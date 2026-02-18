@@ -26,15 +26,29 @@ analyzing restaurant menus. You have access to three specialist agents:
 3. QualityAgent – evaluates menu description quality and suggests improvements
    to boost conversion and clarity.
 
-Read the user's query, decide which agent(s) to invoke, aggregate their
-responses and deliver a clear, structured final answer.
+Read the user's query, aggregate the specialist agents' responses and deliver
+a clear, structured final answer.
 
-Always respond in the same language the user used.
+IMPORTANT:
+- Use plain text only. Do NOT use markdown formatting (no **, no ##, no *).
+- Always respond in the same language the user used.
 """
 
 ROUTING_PROMPT = """Given the user query below, output ONLY a JSON array with
 the agent names to invoke. Choose from: ["nutrition", "recommendation", "quality"].
-You may select more than one if the query requires multiple perspectives.
+
+ROUTING RULES:
+- "nutrition" = dietary restrictions, allergens, ingredients, calories.
+- "recommendation" = combos, suggestions by budget/occasion, pairings.
+- "quality" = evaluate menu descriptions, suggest copywriting improvements.
+- Select MORE THAN ONE only when the query EXPLICITLY covers multiple domains.
+
+Examples:
+- "Quais pratos são veganos?" -> ["nutrition"]
+- "Monte um combo por R$60" -> ["recommendation"]
+- "Monte um combo vegano por R$60" -> ["nutrition", "recommendation"]
+- "Avalie a qualidade do cardápio" -> ["quality"]
+- "Opções sem glúten e avalie as descrições" -> ["nutrition", "quality"]
 
 Query: {query}
 
