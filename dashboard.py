@@ -24,12 +24,18 @@ RESULTS_DIR = Path("data/eval_results")
 st.set_page_config(page_title="SaborAI", page_icon="🍽️", layout="wide")
 
 # Bridge Streamlit Cloud secrets into env vars so pydantic-settings can read them.
-for _key in ("OPENAI_API_KEY", "OPENAI_MODEL"):
-    if _key not in os.environ:
-        try:
-            os.environ[_key] = st.secrets[_key]
-        except (KeyError, FileNotFoundError):
-            pass
+# Only access st.secrets when a secrets.toml actually exists (avoids console warnings).
+_secrets_paths = [
+    Path.home() / ".streamlit" / "secrets.toml",
+    Path(__file__).parent / ".streamlit" / "secrets.toml",
+]
+if any(p.exists() for p in _secrets_paths):
+    for _key in ("OPENAI_API_KEY", "OPENAI_MODEL"):
+        if _key not in os.environ:
+            try:
+                os.environ[_key] = st.secrets[_key]
+            except (KeyError, FileNotFoundError):
+                pass
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 
