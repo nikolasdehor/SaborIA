@@ -12,10 +12,14 @@ import os
 import tempfile
 from pathlib import Path
 
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()  # Load .env locally (no-op if file missing)
+
+import pandas as pd  # noqa: E402
+import plotly.express as px  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+import streamlit as st  # noqa: E402
 
 RESULTS_DIR = Path("data/eval_results")
 
@@ -23,9 +27,9 @@ RESULTS_DIR = Path("data/eval_results")
 
 st.set_page_config(page_title="SaborAI", page_icon="🍽️", layout="wide")
 
-# Bridge Streamlit Cloud secrets into env vars so pydantic-settings can read them.
-for _key in ("OPENAI_API_KEY", "OPENAI_MODEL"):
-    if _key not in os.environ:
+# On Streamlit Cloud, .env doesn't exist — bridge st.secrets into env vars.
+if "OPENAI_API_KEY" not in os.environ:
+    for _key in ("OPENAI_API_KEY", "OPENAI_MODEL"):
         try:
             os.environ[_key] = st.secrets[_key]
         except Exception:
