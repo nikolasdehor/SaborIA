@@ -8,13 +8,23 @@ Run with:
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 from pathlib import Path
 
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
+
+# Bridge Streamlit Cloud secrets into env vars so pydantic-settings can read them.
+for key in ("OPENAI_API_KEY", "OPENAI_MODEL"):
+    if key not in os.environ:
+        try:
+            os.environ[key] = st.secrets[key]
+        except (KeyError, FileNotFoundError):
+            pass
+
+import pandas as pd  # noqa: E402
+import plotly.express as px  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
 
 RESULTS_DIR = Path("data/eval_results")
 
