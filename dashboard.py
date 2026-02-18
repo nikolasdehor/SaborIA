@@ -204,10 +204,21 @@ with tab_menu:
         st.markdown("### 🔍 Consultar Cardápio")
         st.caption("Faça perguntas sobre o cardápio ingerido.")
 
+        # Session state for query processing
+        if "processing" not in st.session_state:
+            st.session_state.processing = False
+        if "pending_query" not in st.session_state:
+            st.session_state.pending_query = None
+        if "last_result" not in st.session_state:
+            st.session_state.last_result = None
+
+        is_busy = st.session_state.processing
+
         query = st.text_area(
             "Sua pergunta",
             height=100,
             placeholder="Ex: Monte um combo vegano por até R$60 para um casal.",
+            disabled=is_busy,
         )
 
         example_queries = [
@@ -219,56 +230,71 @@ with tab_menu:
 
         st.markdown("**Exemplos rápidos:**")
         example_cols = st.columns(2)
-        selected_example = None
         for i, (icon, ex) in enumerate(example_queries):
             with example_cols[i % 2]:
                 if st.button(
                     f"{icon} {ex[:45]}...",
                     key=f"ex_{i}",
                     use_container_width=True,
+                    disabled=is_busy,
                 ):
-                    selected_example = ex
+                    st.session_state.pending_query = ex
+                    st.session_state.processing = True
+                    st.session_state.last_result = None
+                    st.rerun()
 
-        send_clicked = st.button(
+        if st.button(
             "🚀 Enviar Consulta",
             type="primary",
-            disabled=not query and not selected_example,
+            disabled=is_busy or not query,
             use_container_width=True,
-        )
+        ):
+            st.session_state.pending_query = query
+            st.session_state.processing = True
+            st.session_state.last_result = None
+            st.rerun()
 
-        effective_query = selected_example or query
+        # Process pending query (runs after rerun — buttons already disabled)
+        if st.session_state.processing and st.session_state.pending_query:
+            effective_query = st.session_state.pending_query
+            st.caption(f"Consultando: *{effective_query}*")
+            with st.spinner("Consultando agentes especializados..."):
+                try:
+                    from agents.supervisor import SupervisorAgent
 
-        if send_clicked or selected_example:
-            if not effective_query:
-                st.warning("Digite uma pergunta ou selecione um exemplo.")
+                    active_menu = st.session_state.get("ingested_menu")
+                    supervisor = SupervisorAgent()
+                    result = supervisor.run(effective_query, menu_name=active_menu)
+                    st.session_state.last_result = result
+                except Exception as e:
+                    st.session_state.last_result = {"error": str(e)}
+                finally:
+                    st.session_state.processing = False
+                    st.session_state.pending_query = None
+
+        # Display results (persists across reruns)
+        if st.session_state.last_result:
+            result = st.session_state.last_result
+            if "error" in result:
+                st.error(f"Erro na consulta: {result['error']}")
             else:
-                with st.spinner("Consultando agentes especializados..."):
-                    try:
-                        from agents.supervisor import SupervisorAgent
+                st.markdown("---")
+                st.markdown("#### 💬 Resposta")
+                st.info(result["response"])
 
-                        active_menu = st.session_state.get("ingested_menu")
-                        supervisor = SupervisorAgent()
-                        result = supervisor.run(effective_query, menu_name=active_menu)
+                agents_used = result["agents_used"]
+                badges = " ".join(
+                    f'<span class="status-badge">{a}</span>' for a in agents_used
+                )
+                st.markdown(
+                    f"**Agentes utilizados:** {badges}",
+                    unsafe_allow_html=True,
+                )
 
-                        st.markdown("---")
-                        st.markdown("#### 💬 Resposta")
-                        st.info(result["response"])
-
-                        agents_used = result["agents_used"]
-                        badges = " ".join(
-                            f'<span class="status-badge">{a}</span>' for a in agents_used
-                        )
-                        st.markdown(
-                            f"**Agentes utilizados:** {badges}",
-                            unsafe_allow_html=True,
-                        )
-
-                        with st.expander("Ver detalhes por agente"):
-                            for agent_name, output in result.get("agent_outputs", {}).items():
-                                st.markdown(f"**{agent_name.upper()}**")
-                                st.info(output)
-                    except Exception as e:
-                        st.error(f"Erro na consulta: {e}")
+                with st.expander("Ver detalhes por agente"):
+                    for agent_name, output in result.get("agent_outputs", {}).items():
+                        st.markdown(f"**{agent_name.upper()}**")
+                        st.info(output)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
