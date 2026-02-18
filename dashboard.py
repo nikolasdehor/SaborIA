@@ -271,6 +271,7 @@ with tab_menu:
                 finally:
                     st.session_state.processing = False
                     st.session_state.pending_query = None
+            st.rerun()
 
         # Display results (persists across reruns)
         if st.session_state.last_result:
