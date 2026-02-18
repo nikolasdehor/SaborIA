@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     # RAG config
-    chunk_size: int = 512
-    chunk_overlap: int = 64
+    chunk_size: int = 1024
+    chunk_overlap: int = 128
     retriever_k: int = 6
 
 
