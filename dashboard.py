@@ -283,9 +283,7 @@ with tab_menu:
                 st.info(result["response"])
 
                 agents_used = result["agents_used"]
-                badges = " ".join(
-                    f'<span class="status-badge">{a}</span>' for a in agents_used
-                )
+                badges = " ".join(f'<span class="status-badge">{a}</span>' for a in agents_used)
                 st.markdown(
                     f"**Agentes utilizados:** {badges}",
                     unsafe_allow_html=True,
