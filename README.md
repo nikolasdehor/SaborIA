@@ -2,11 +2,15 @@
 
 > Sistema multi-agente com RAG para analise inteligente de cardapios de restaurantes.
 
+[![Live Demo](https://img.shields.io/badge/🍽️_Live_Demo-SaborAI-FF4B4B?style=for-the-badge)](https://saboria.streamlit.app)
+
 [![CI](https://github.com/nikolasdehor/CardapIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/CardapIA/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3-purple.svg)](https://langchain.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+> **[Acesse o demo ao vivo →](https://saboria.streamlit.app)**
 
 ---
 
