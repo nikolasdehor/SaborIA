@@ -1,0 +1,152 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── Build release image ───────────────────────────────────────────────────
+  build-release:
+    name: Build Release Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.meta.outputs.version }}
+
+  # ── Deploy to staging ─────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-release
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        env:
+          IMAGE_TAG: ${{ needs.build-release.outputs.image-tag }}
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_STAGING }}
+        run: |
+          echo "Deploying image tag: $IMAGE_TAG to staging"
+          # Uncomment when Kubernetes is configured:
+          # echo "$KUBECONFIG_DATA" | base64 -d > /tmp/kubeconfig
+          # export KUBECONFIG=/tmp/kubeconfig
+          # kubectl set image deployment/saborai-api api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          # kubectl set image deployment/saborai-dashboard dashboard=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          # kubectl rollout status deployment/saborai-api --timeout=120s
+          # kubectl rollout status deployment/saborai-dashboard --timeout=120s
+
+  # ── Run evals on staging ──────────────────────────────────────────────────
+  smoke-test:
+    name: Smoke Tests & Evals
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Health check
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+        run: |
+          echo "Running smoke tests against staging"
+          # Uncomment when staging is deployed:
+          # for i in $(seq 1 10); do
+          #   STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${STAGING_URL}/health)
+          #   [ "$STATUS" = "200" ] && echo "Health check passed" && exit 0
+          #   echo "Attempt $i: got $STATUS, retrying..."
+          #   sleep 5
+          # done
+          # echo "Health check failed" && exit 1
+
+      - name: Run eval suite
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+        run: |
+          echo "Running eval suite against staging"
+          # Uncomment when staging is deployed:
+          # RESPONSE=$(curl -s -X POST ${STAGING_URL}/evaluate \
+          #   -H "Content-Type: application/json" \
+          #   -d '{"suite": "default"}')
+          # echo "$RESPONSE" | jq .
+          # AVG_RELEVANCE=$(echo "$RESPONSE" | jq '.aggregated.avg_relevance')
+          # if (( $(echo "$AVG_RELEVANCE < 0.7" | bc -l) )); then
+          #   echo "::error::Relevance score $AVG_RELEVANCE below threshold 0.7"
+          #   exit 1
+          # fi
+
+  # ── Deploy to production ──────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: smoke-test
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.environment == 'production')
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to production
+        env:
+          IMAGE_TAG: ${{ needs.build-release.outputs.image-tag }}
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_PRODUCTION }}
+        run: |
+          echo "Deploying image tag: $IMAGE_TAG to production"
+          # Uncomment when Kubernetes is configured:
+          # echo "$KUBECONFIG_DATA" | base64 -d > /tmp/kubeconfig
+          # export KUBECONFIG=/tmp/kubeconfig
+          # kubectl set image deployment/saborai-api api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          # kubectl set image deployment/saborai-dashboard dashboard=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG}
+          # kubectl rollout status deployment/saborai-api --timeout=120s
+          # kubectl rollout status deployment/saborai-dashboard --timeout=120s

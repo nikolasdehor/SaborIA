@@ -1,0 +1,38 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - saborai_chroma:/app/data/chroma
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+      - saborai_chroma:/app/data/chroma
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/app
+    command: streamlit run dashboard.py --server.address 0.0.0.0 --server.port 8501
+    depends_on:
+      api:
+        condition: service_started
+
+volumes:
+  saborai_chroma:

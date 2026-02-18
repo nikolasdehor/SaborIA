@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.venv/
+data/chroma/
+data/eval_results/
+.DS_Store
+*.egg-info/
+dist/
+build/
+.ruff_cache/
