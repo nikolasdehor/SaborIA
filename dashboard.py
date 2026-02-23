@@ -43,20 +43,174 @@ st.markdown(
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
+    /* ── Hero banner ────────────────────────────────────────────────── */
+    .hero-banner {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border: 1px solid rgba(255, 75, 75, 0.15);
+        border-radius: 20px;
+        padding: 2.5rem 3rem 2rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255,75,75,0.08) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,142,83,0.06) 0%, transparent 70%);
+        border-radius: 50%;
+    }
     .hero-title {
-        font-size: 2.8rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #FF4B4B 0%, #FF8E53 100%);
+        font-size: 3.2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #FF4B4B 0%, #FF8E53 50%, #FFBD59 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 0;
+        margin-bottom: 4px;
+        letter-spacing: -1px;
+        position: relative;
+        z-index: 1;
     }
     .hero-subtitle {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         color: #9CA3AF;
         margin-top: 0;
+        margin-bottom: 1.2rem;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #D1D5DB;
+    }
+    .chip-rag     { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.25); }
+    .chip-agents  { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.25); }
+    .chip-evals   { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.25); }
+    .chip-stream  { background: rgba(255,75,75,0.12); border-color: rgba(255,75,75,0.25); }
+
+    /* ── Agent cards ────────────────────────────────────────────────── */
+    .agent-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 1rem 0 1.5rem;
+    }
+    .agent-card {
+        background: linear-gradient(145deg, #1A1D23 0%, #1E2229 100%);
+        border: 1px solid #2D3139;
+        border-radius: 14px;
+        padding: 18px 16px;
+        text-align: center;
+        transition: border-color 0.25s, transform 0.2s;
+    }
+    .agent-card:hover {
+        border-color: rgba(255,142,83,0.4);
+        transform: translateY(-2px);
+    }
+    .agent-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .agent-name {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #E5E7EB;
+        margin-bottom: 3px;
+    }
+    .agent-desc {
+        font-size: 0.72rem;
+        color: #6B7280;
+        line-height: 1.35;
     }
 
+    /* ── Section panels ─────────────────────────────────────────────── */
+    .panel {
+        background: linear-gradient(145deg, #13151A 0%, #181B22 100%);
+        border: 1px solid #2D3139;
+        border-radius: 16px;
+        padding: 1.6rem 1.5rem 1.2rem;
+    }
+    .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+    .panel-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .panel-icon-upload { background: rgba(59,130,246,0.15); }
+    .panel-icon-query  { background: rgba(255,75,75,0.15); }
+    .panel-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #F3F4F6;
+        margin: 0;
+    }
+    .panel-desc {
+        font-size: 0.85rem;
+        color: #6B7280;
+        margin-bottom: 1rem;
+        padding-left: 48px;
+    }
+
+    /* ── How it works ───────────────────────────────────────────────── */
+    .flow-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin: 0.8rem 0 1.6rem;
+        flex-wrap: wrap;
+    }
+    .flow-step {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid #2D3139;
+        border-radius: 10px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #D1D5DB;
+    }
+    .flow-arrow {
+        color: #4B5563;
+        font-size: 1rem;
+    }
+
+    /* ── Metrics / badges ───────────────────────────────────────────── */
     div[data-testid="stMetric"] {
         background: linear-gradient(135deg, #1A1D23 0%, #22262E 100%);
         border: 1px solid #2D3139;
@@ -68,9 +222,7 @@ st.markdown(
         font-size: 0.85rem;
     }
 
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
     .stTabs [data-baseweb="tab"] {
         border-radius: 8px;
         padding: 10px 24px;
@@ -88,9 +240,24 @@ st.markdown(
         border: 1px solid rgba(59, 130, 246, 0.3);
     }
 
+    .menu-loaded {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background: rgba(16,185,129,0.12);
+        color: #10B981;
+        border: 1px solid rgba(16,185,129,0.3);
+        margin-bottom: 0.8rem;
+    }
+
     .stButton > button {
-        border-radius: 8px;
+        border-radius: 10px;
         transition: all 0.2s;
+        font-weight: 600;
     }
 
     .section-sep {
@@ -104,11 +271,65 @@ st.markdown(
 
 # ── Header ────────────────────────────────────────────────────────────────────
 
-st.markdown('<p class="hero-title">SaborAI</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="hero-subtitle">'
-    "Sistema multi-agente com RAG para análise inteligente de cardápios"
-    "</p>",
+    """
+    <div class="hero-banner">
+        <p class="hero-title">🍽️ SaborAI</p>
+        <p class="hero-subtitle">
+            Sistema multi-agente com RAG para análise inteligente de cardápios de restaurantes
+        </p>
+        <div class="hero-chips">
+            <span class="hero-chip chip-rag">🔎 RAG com ChromaDB</span>
+            <span class="hero-chip chip-agents">🤖 3 Agentes Especialistas</span>
+            <span class="hero-chip chip-evals">📊 Eval Framework</span>
+            <span class="hero-chip chip-stream">⚡ Async Paralelo</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ── Agent cards ───────────────────────────────────────────────────────────────
+
+st.markdown(
+    """
+    <div class="agent-cards">
+        <div class="agent-card">
+            <div class="agent-icon">🥗</div>
+            <div class="agent-name">NutritionAgent</div>
+            <div class="agent-desc">Restrições alimentares, alérgenos, calorias e dietas especiais</div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-icon">🎯</div>
+            <div class="agent-name">RecommendationAgent</div>
+            <div class="agent-desc">Combos personalizados, sugestões por orçamento e ocasião</div>
+        </div>
+        <div class="agent-card">
+            <div class="agent-icon">✍️</div>
+            <div class="agent-name">QualityAgent</div>
+            <div class="agent-desc">Qualidade das descrições, UX writing e conversão</div>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ── How it works ──────────────────────────────────────────────────────────────
+
+st.markdown(
+    """
+    <div class="flow-steps">
+        <span class="flow-step">📄 Upload Cardápio</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">🔪 Chunking + Embed</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">🧠 Routing LLM</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">🤖 Agentes em Paralelo</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-step">💬 Resposta Consolidada</span>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -126,8 +347,14 @@ with tab_menu:
 
     # ── Upload / Ingest ───────────────────────────────────────────────────
     with col_upload:
-        st.markdown("### 📤 Ingerir Cardápio")
-        st.caption("Suba um arquivo PDF ou TXT de cardápio para o sistema analisar.")
+        st.markdown(
+            '<div class="panel-header">'
+            '<div class="panel-icon panel-icon-upload">📤</div>'
+            '<p class="panel-title">Ingerir Cardápio</p>'
+            "</div>"
+            '<p class="panel-desc">Suba um arquivo PDF/TXT ou cole o texto do cardápio.</p>',
+            unsafe_allow_html=True,
+        )
 
         upload_method = st.radio(
             "Método de entrada",
@@ -201,8 +428,22 @@ with tab_menu:
 
     # ── Query ─────────────────────────────────────────────────────────────
     with col_query:
-        st.markdown("### 🔍 Consultar Cardápio")
-        st.caption("Faça perguntas sobre o cardápio ingerido.")
+        st.markdown(
+            '<div class="panel-header">'
+            '<div class="panel-icon panel-icon-query">🔍</div>'
+            '<p class="panel-title">Consultar Cardápio</p>'
+            "</div>"
+            '<p class="panel-desc">Faça perguntas sobre o cardápio ingerido.</p>',
+            unsafe_allow_html=True,
+        )
+
+        # Show loaded-menu indicator
+        active_menu = st.session_state.get("ingested_menu")
+        if active_menu:
+            st.markdown(
+                f'<span class="menu-loaded">✅ Cardápio ativo: {active_menu}</span>',
+                unsafe_allow_html=True,
+            )
 
         # Session state for query processing
         if "processing" not in st.session_state:
@@ -284,9 +525,17 @@ with tab_menu:
                 st.info(result["response"])
 
                 agents_used = result["agents_used"]
+                latency = result.get("latency_ms")
                 badges = " ".join(f'<span class="status-badge">{a}</span>' for a in agents_used)
+                latency_badge = (
+                    f' <span class="status-badge" style="background:rgba(255,75,75,0.12);'
+                    f'color:#FF8E53;border-color:rgba(255,142,83,0.3);">'
+                    f'⚡ {latency:.0f}ms</span>'
+                    if latency
+                    else ""
+                )
                 st.markdown(
-                    f"**Agentes utilizados:** {badges}",
+                    f"**Agentes utilizados:** {badges}{latency_badge}",
                     unsafe_allow_html=True,
                 )
 
