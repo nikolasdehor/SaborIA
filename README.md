@@ -34,8 +34,8 @@ Query do Usuario
 SupervisorAgent  <- roteamento via LLM (GPT-4o-mini)
       |
       |---> NutritionAgent       (restricoes alimentares, alergenicos, calorias)
-      |---> RecommendationAgent  (combos, filtro por budget, harmonizacoes)
-      \---> QualityAgent         (score de qualidade descritiva, otimizacao de conversao)
+      |---> RecommendationAgent  (combos, filtro por budget, harmonizacoes)       } asyncio.gather
+      \---> QualityAgent         (score de qualidade descritiva, conversao)       } (paralelo)
                |
                v
          ChromaDB (vector store local)
@@ -51,9 +51,13 @@ SupervisorAgent  <- roteamento via LLM (GPT-4o-mini)
 |---|---|
 | Supervisor + especialistas | Separacao de responsabilidades; cada agente tem prompts focados e tunados |
 | Roteamento via LLM | Flexivel — lida com queries ambiguas que abrangem multiplos dominios |
+| Execucao paralela (async) | Agentes rodam em paralelo via `asyncio.gather`, cortando latencia em ~1/N |
+| Retry com exponential backoff | Resiliencia contra rate limits e falhas transientes da API OpenAI |
+| Streaming SSE | Respostas parciais via Server-Sent Events para UX responsiva |
 | Deduplicacao por hash de conteudo | Evita drift de embedding ao re-ingerir o mesmo conteudo |
 | LLM-as-judge nos evals | Metricas de qualidade escalaveis sem necessidade de dataset anotado manualmente |
 | Dados sinteticos via LLM | Aumenta cobertura de dados para cuisines/faixas de preco com baixa representacao |
+| Logging estruturado (JSON) | Rastreamento de requests com ID unico e metricas de latencia per-request |
 
 ---
 
@@ -113,7 +117,8 @@ O script gera um manifesto JSON com metadata (Pydantic) para rastreamento de qua
 | `GET` | `/health` | Health check |
 | `POST` | `/ingest/file` | Upload de cardapio em PDF ou TXT |
 | `POST` | `/ingest/text` | Ingestao de texto puro |
-| `POST` | `/query` | Query multi-agente |
+| `POST` | `/query` | Query multi-agente (async, agentes em paralelo) |
+| `POST` | `/query/stream` | Query com streaming via Server-Sent Events |
 | `POST` | `/evaluate` | Executa o suite de evals |
 
 Documentacao interativa disponivel em `http://localhost:8000/docs` (Swagger UI).
@@ -213,26 +218,36 @@ streamlit run dashboard.py
 ## Estrutura do Projeto
 
 ```
-saborai/
+CardapIA/
 ├── agents/
-│   ├── supervisor.py              # Roteamento e consolidacao
+│   ├── supervisor.py              # Roteamento, consolidacao e execucao paralela
 │   ├── nutrition.py               # Especialista em dietas e alergenicos
 │   ├── recommendation.py         # Especialista em combos e harmonizacoes
-│   └── quality.py                 # Especialista em qualidade e conversao
+│   ├── quality.py                 # Especialista em qualidade e conversao
+│   └── retry.py                   # Retry com exponential backoff (sync + async)
 ├── api/
-│   ├── main.py                    # App FastAPI e endpoints
-│   └── settings.py                # Configuracao via Pydantic-settings
+│   ├── main.py                    # App FastAPI e endpoints (incl. SSE streaming)
+│   ├── settings.py                # Configuracao via Pydantic-settings
+│   └── middleware.py              # Logging estruturado e request tracking
 ├── ingestion/
 │   └── pipeline.py                # Load -> chunk -> deduplica -> embed
 ├── evals/
 │   └── runner.py                  # Framework LLM-as-judge
+├── experiments/
+│   └── compare_models.py         # Experimentacao comparativa de modelos/configs
 ├── scripts/
 │   └── generate_synthetic_menus.py  # Geracao de dados sinteticos via LLM
 ├── data/
-│   └── sample_menus/              # Cardapios de exemplo e sinteticos
+│   ├── sample_menus/              # Cardapios de exemplo e sinteticos
+│   ├── eval_results/              # Resultados de avaliacoes
+│   └── experiment_results/        # Resultados de experimentos
 ├── tests/
 │   ├── conftest.py                # Fixtures e configuracao de testes
-│   └── test_api.py                # Testes de integracao
+│   ├── test_api.py                # Testes de integracao (API endpoints)
+│   ├── test_agents.py             # Testes de inicializacao e configuracao
+│   ├── test_supervisor.py         # Testes de routing e orquestracao
+│   ├── test_pipeline.py           # Testes do pipeline de ingestao
+│   └── test_retry.py             # Testes do modulo de retry
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                 # Lint, test, build Docker
@@ -264,6 +279,33 @@ O pipeline de CI/CD roda no GitHub Actions:
 
 ---
 
+## Experimentacao com LLMs
+
+Script para rodar experimentos comparativos entre modelos, temperaturas e tamanhos de chunk:
+
+```bash
+# Comparar GPT-4o-mini vs GPT-4o com diferentes temperaturas
+python -m experiments.compare_models --models gpt-4o-mini gpt-4o --temperatures 0 0.2 0.5
+
+# Comparar diferentes chunk sizes
+python -m experiments.compare_models --chunk-sizes 512 1024 2048
+```
+
+Resultados salvos em `data/experiment_results/` com metricas de relevancia, coerencia,
+completude, cobertura de keywords e latencia por configuracao.
+
+---
+
+## Observabilidade
+
+- **Logging estruturado (JSON):** Cada request carrega um `X-Request-ID` unico, e todos os logs
+  sao emitidos como JSON lines (compativeis com Loki, CloudWatch, etc.).
+- **Metricas por request:** Header `X-Response-Time-Ms` em toda resposta.
+- **Retry com backoff:** Chamadas a OpenAI com ate 3 retries automaticos com exponential backoff
+  e jitter para lidar com rate limits e erros transientes.
+
+---
+
 ## Roadmap
 
 - [x] Sistema multi-agente com RAG (Supervisor + 3 especialistas)
@@ -272,8 +314,11 @@ O pipeline de CI/CD roda no GitHub Actions:
 - [x] Geracao de dados sinteticos via LLM
 - [x] Dashboard de evals (Streamlit)
 - [x] CI/CD com GitHub Actions
-- [ ] Execucao assincrona dos agentes (chamadas paralelas)
-- [ ] Streaming de respostas via SSE
+- [x] Execucao assincrona dos agentes (chamadas paralelas via asyncio.gather)
+- [x] Streaming de respostas via SSE (`/query/stream`)
+- [x] Retry com exponential backoff nas chamadas OpenAI
+- [x] Logging estruturado (JSON) com request tracking
+- [x] Framework de experimentacao comparativa de LLMs
 - [ ] Suporte a cardapios em imagem (vision + OCR)
 - [ ] Suporte multilingue
 

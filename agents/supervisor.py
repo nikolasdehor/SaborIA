@@ -1,11 +1,18 @@
 """
 Supervisor agent: routes user queries to the right specialist agent and
 consolidates the final response.
+
+Supports both sync (`run`) and async (`arun`) execution. The async path
+invokes specialist agents in **parallel** via `asyncio.gather`, cutting
+latency roughly by `1/N` where N is the number of routed agents.
 """
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+import time
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -13,6 +20,7 @@ from langchain_openai import ChatOpenAI
 from agents.nutrition import NutritionAgent
 from agents.quality import QualityAgent
 from agents.recommendation import RecommendationAgent
+from agents.retry import async_retry_with_backoff, retry_with_backoff
 from api.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -72,9 +80,8 @@ class SupervisorAgent:
             "quality": QualityAgent(),
         }
 
+    @retry_with_backoff(max_retries=2)
     def _route(self, query: str) -> list[str]:
-        import json
-
         prompt = ROUTING_PROMPT.format(query=query)
         response = self.llm.invoke([HumanMessage(content=prompt)])
         raw = response.content.strip()
@@ -87,19 +94,21 @@ class SupervisorAgent:
             logger.warning("Routing failed, defaulting to recommendation. Raw: %s", raw)
             return ["recommendation"]
 
-    def run(self, query: str, menu_name: str | None = None) -> dict:
-        selected = self._route(query)
-        logger.info("Routing query to agents: %s", selected)
+    @async_retry_with_backoff(max_retries=2)
+    async def _aroute(self, query: str) -> list[str]:
+        prompt = ROUTING_PROMPT.format(query=query)
+        response = await self.llm.ainvoke([HumanMessage(content=prompt)])
+        raw = response.content.strip()
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        try:
+            agents = json.loads(raw)
+            return [a for a in agents if a in self.agents]
+        except Exception:
+            logger.warning("Routing failed, defaulting to recommendation. Raw: %s", raw)
+            return ["recommendation"]
 
-        agent_outputs: dict[str, str] = {}
-        for name in selected:
-            try:
-                agent_outputs[name] = self.agents[name].run(query, menu_name)
-            except Exception as exc:
-                logger.error("Agent '%s' failed: %s", name, exc)
-                agent_outputs[name] = f"[Erro no agente {name}: {exc}]"
-
-        # Consolidate
+    def _consolidate(self, query: str, agent_outputs: dict[str, str]) -> str:
+        """Ask the LLM to merge specialist answers into one final response."""
         consolidation_input = "\n\n".join(
             f"[{name.upper()} AGENT]\n{output}" for name, output in agent_outputs.items()
         )
@@ -113,11 +122,83 @@ class SupervisorAgent:
                 )
             ),
         ]
-        final = self.llm.invoke(messages)
+        return self.llm.invoke(messages).content
+
+    async def _aconsolidate(self, query: str, agent_outputs: dict[str, str]) -> str:
+        consolidation_input = "\n\n".join(
+            f"[{name.upper()} AGENT]\n{output}" for name, output in agent_outputs.items()
+        )
+        messages = [
+            SystemMessage(content=SYSTEM_PROMPT),
+            HumanMessage(
+                content=(
+                    f"Consulta do usuario: {query}\n\n"
+                    f"Respostas dos agentes especialistas:\n{consolidation_input}\n\n"
+                    "Agora escreva a resposta final consolidada para o usuario em portugues."
+                )
+            ),
+        ]
+        resp = await self.llm.ainvoke(messages)
+        return resp.content
+
+    # ── Sync path (backward-compatible) ──────────────────────────────────
+
+    def run(self, query: str, menu_name: str | None = None) -> dict:
+        t0 = time.perf_counter()
+        selected = self._route(query)
+        logger.info("Routing query to agents: %s", selected)
+
+        agent_outputs: dict[str, str] = {}
+        for name in selected:
+            try:
+                agent_outputs[name] = self.agents[name].run(query, menu_name)
+            except Exception as exc:
+                logger.error("Agent '%s' failed: %s", name, exc)
+                agent_outputs[name] = f"[Erro no agente {name}: {exc}]"
+
+        final = self._consolidate(query, agent_outputs)
+        latency_ms = (time.perf_counter() - t0) * 1000
+        logger.info("Query completed in %.0f ms (agents: %s)", latency_ms, selected)
 
         return {
             "query": query,
             "agents_used": selected,
             "agent_outputs": agent_outputs,
-            "response": final.content,
+            "response": final,
+            "latency_ms": round(latency_ms, 1),
+        }
+
+    # ── Async path (parallel agent execution) ────────────────────────────
+
+    async def arun(self, query: str, menu_name: str | None = None) -> dict:
+        """Run the full pipeline asynchronously.
+
+        Specialist agents are invoked **in parallel** via asyncio.gather,
+        reducing wall-clock latency when multiple agents are selected.
+        """
+        t0 = time.perf_counter()
+        selected = await self._aroute(query)
+        logger.info("Routing query to agents (async): %s", selected)
+
+        async def _invoke_agent(name: str) -> tuple[str, str]:
+            try:
+                result = await self.agents[name].arun(query, menu_name)
+                return name, result
+            except Exception as exc:
+                logger.error("Agent '%s' failed: %s", name, exc)
+                return name, f"[Erro no agente {name}: {exc}]"
+
+        results = await asyncio.gather(*[_invoke_agent(n) for n in selected])
+        agent_outputs = dict(results)
+
+        final = await self._aconsolidate(query, agent_outputs)
+        latency_ms = (time.perf_counter() - t0) * 1000
+        logger.info("Query completed in %.0f ms (async, agents: %s)", latency_ms, selected)
+
+        return {
+            "query": query,
+            "agents_used": selected,
+            "agent_outputs": agent_outputs,
+            "response": final,
+            "latency_ms": round(latency_ms, 1),
         }

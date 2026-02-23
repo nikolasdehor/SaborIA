@@ -113,7 +113,7 @@ def get_retriever(menu_name: str | None = None):
         # sees the complete menu (critical for negation queries like
         # "which dishes do NOT contain X").
         menu_id = hashlib.md5(menu_name.encode()).hexdigest()[:8]
-        search_kwargs = {"k": 50, "filter": {"menu_id": menu_id}}
+        search_kwargs = {"k": settings.retriever_k_full_menu, "filter": {"menu_id": menu_id}}
     else:
         search_kwargs = {"k": settings.retriever_k}
     return vs.as_retriever(search_kwargs=search_kwargs)

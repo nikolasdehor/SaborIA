@@ -87,6 +87,8 @@ class ScoreResult(TypedDict):
 
 
 def _llm_judge(system: str, query: str, answer: str, context: str = "") -> ScoreResult:
+    # Judge uses a fixed model (gpt-4o-mini) intentionally to ensure
+    # evaluation consistency regardless of the model under test.
     judge = ChatOpenAI(
         model="gpt-4o-mini",
         openai_api_key=settings.openai_api_key,

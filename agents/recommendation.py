@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
+from agents.retry import async_retry_with_backoff, retry_with_backoff
 from api.settings import settings
 from ingestion.pipeline import get_retriever
+
+logger = logging.getLogger(__name__)
 
 SYSTEM = """You are an expert food sommelier and menu consultant. Using ONLY the
 menu context provided, help users by:
@@ -34,9 +39,9 @@ class RecommendationAgent:
             temperature=0.2,
         )
 
-    def run(self, query: str, menu_name: str | None = None) -> str:
+    def _build_chain(self, menu_name: str | None = None) -> RetrievalQA:
         retriever = get_retriever(menu_name)
-        chain = RetrievalQA.from_chain_type(
+        return RetrievalQA.from_chain_type(
             llm=self.llm,
             chain_type="stuff",
             retriever=retriever,
@@ -45,7 +50,17 @@ class RecommendationAgent:
                 "prompt": _build_prompt(SYSTEM),
             },
         )
+
+    @retry_with_backoff(max_retries=3)
+    def run(self, query: str, menu_name: str | None = None) -> str:
+        chain = self._build_chain(menu_name)
         result = chain.invoke({"query": query})
+        return result["result"]
+
+    @async_retry_with_backoff(max_retries=3)
+    async def arun(self, query: str, menu_name: str | None = None) -> str:
+        chain = self._build_chain(menu_name)
+        result = await chain.ainvoke({"query": query})
         return result["result"]
 
 

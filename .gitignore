@@ -5,7 +5,9 @@ __pycache__/
 .venv/
 data/chroma/
 data/eval_results/
+data/experiment_results/
 .DS_Store
+.venv_test/
 *.egg-info/
 dist/
 build/

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     chunk_size: int = 1024
     chunk_overlap: int = 128
     retriever_k: int = 6
+    retriever_k_full_menu: int = 50  # k for single-menu retrieval (needs all chunks)
 
 
 settings = Settings()
