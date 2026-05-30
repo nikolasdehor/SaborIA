@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# mcp-fiscal-brasil - Python MCP server
+
+language: "pt-BR"
+tone_instructions: "Assertivo. Segurança de API, injeção, performance Python. pt-BR, hífens."
+# 73 chars
+
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+  high_level_summary: true
+  review_status: true
+  poem: false
+  estimate_code_review_effort: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+
+  path_instructions:
+    - path: "**/*.py"
+      instructions: |
+        Python. Verificar:
+        - Type hints em todas as funções públicas.
+        - Sem `except Exception` sem re-raise ou logging.
+        - f-strings em SQL ou comandos shell (risco de injection).
+        - Credenciais sempre via os.environ, nunca hardcoded.
+        - Async/await correto - sem bloqueio de event loop.
+
+    - path: "src/mcp_fiscal_brasil/**"
+      instructions: |
+        MCP server. Verificar:
+        - Tools com descrições claras (expostas ao LLM).
+        - Inputs de tool validados antes de processar (nunca confiar em input do LLM diretamente).
+        - Prompt injection: se o tool aceita texto livre, verificar se pode ser usado para
+          exfiltrar dados ou executar ações não autorizadas.
+        - Rate limiting ou circuit breaker em chamadas a APIs externas (Receita Federal, etc).
+        - Erros retornados como mensagem de erro MCP, não como exception não tratada.
+
+    - path: ".github/workflows/**"
+      instructions: |
+        CI/CD: secrets via secrets.*, permissions mínimas, cache não vaza deps privadas.
+
+  path_filters:
+    - "!**/__pycache__/**"
+    - "!**/*.pyc"
+    - "!**/.pytest_cache/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/*.egg-info/**"
+    - "!**/node_modules/**"
+    - "!*.lock"
+    - "!uv.lock"
+    - "!.coderabbit.yaml"
+
+  tools:
+    ruff:
+      enabled: true
+    flake8:
+      enabled: true
+    semgrep:
+      enabled: true
+    gitleaks:
+      enabled: true
+    presidio:
+      enabled: true
+    markdownlint:
+      enabled: true
+
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "AGENTS.md"
+      - ".github/copilot-instructions.md"
+  learnings:
+    scope: "local"
+
+chat:
+  auto_reply: true
