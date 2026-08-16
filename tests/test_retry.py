@@ -1,11 +1,10 @@
 """Unit tests for the retry module."""
 
 import asyncio
+import os
 import time
 
 import pytest
-
-import os
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 

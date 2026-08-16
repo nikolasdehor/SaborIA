@@ -84,7 +84,9 @@ class RequestTrackingMiddleware(BaseHTTPMiddleware):
             request.url.path,
             response.status_code,
             elapsed_ms,
-            extra={"extra_data": {"status": response.status_code, "latency_ms": round(elapsed_ms, 1)}},
+            extra={
+                "extra_data": {"status": response.status_code, "latency_ms": round(elapsed_ms, 1)}
+            },
         )
 
         response.headers["X-Request-ID"] = req_id

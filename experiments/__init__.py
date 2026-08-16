@@ -100,10 +100,12 @@ def _judge_answer(query: str, answer: str, judge_model: str = "gpt-4o-mini") -> 
         openai_api_key=settings.openai_api_key,
         temperature=0,
     )
-    resp = judge.invoke([
-        SystemMessage(content=JUDGE_PROMPT),
-        HumanMessage(content=f"Question: {query}\n\nAnswer: {answer}"),
-    ])
+    resp = judge.invoke(
+        [
+            SystemMessage(content=JUDGE_PROMPT),
+            HumanMessage(content=f"Question: {query}\n\nAnswer: {answer}"),
+        ]
+    )
     raw = resp.content.strip()
     raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
     try:
@@ -125,15 +127,17 @@ def _run_single_query(
 
     # Simple direct query (not full pipeline — isolates LLM behavior)
     t0 = time.perf_counter()
-    resp = llm.invoke([
-        SystemMessage(
-            content=(
-                "Voce e um assistente de restaurante. Responda de forma clara "
-                "e detalhada em portugues brasileiro. Use texto puro."
-            )
-        ),
-        HumanMessage(content=benchmark["query"]),
-    ])
+    resp = llm.invoke(
+        [
+            SystemMessage(
+                content=(
+                    "Voce e um assistente de restaurante. Responda de forma clara "
+                    "e detalhada em portugues brasileiro. Use texto puro."
+                )
+            ),
+            HumanMessage(content=benchmark["query"]),
+        ]
+    )
     latency_ms = (time.perf_counter() - t0) * 1000
     answer = resp.content
 
@@ -177,7 +181,9 @@ def run_experiment(
 
     all_results: list[dict] = []
     for cfg in configs:
-        logger.info("Config: model=%s temp=%.1f chunk=%d", cfg.model, cfg.temperature, cfg.chunk_size)
+        logger.info(
+            "Config: model=%s temp=%.1f chunk=%d", cfg.model, cfg.temperature, cfg.chunk_size
+        )
         for bm in BENCHMARK_QUERIES:
             try:
                 result = _run_single_query(cfg, bm)
@@ -192,16 +198,20 @@ def run_experiment(
                 )
             except Exception as exc:
                 logger.error("  %s: FAILED — %s", bm["id"], exc)
-                all_results.append({
-                    "config": cfg.model_dump(),
-                    "query_id": bm["id"],
-                    "error": str(exc),
-                })
+                all_results.append(
+                    {
+                        "config": cfg.model_dump(),
+                        "query_id": bm["id"],
+                        "error": str(exc),
+                    }
+                )
 
     # Aggregate by config
     summary: list[dict] = []
     for cfg in configs:
-        cfg_results = [r for r in all_results if r.get("config") == cfg.model_dump() and "scores" in r]
+        cfg_results = [
+            r for r in all_results if r.get("config") == cfg.model_dump() and "scores" in r
+        ]
         if not cfg_results:
             continue
 
@@ -217,11 +227,13 @@ def run_experiment(
         kw_total = sum(r["keyword_total"] for r in cfg_results)
         avg_scores["keyword_coverage"] = round(kw_hits / max(kw_total, 1), 3)
 
-        summary.append({
-            "config": cfg.model_dump(),
-            "n_queries": len(cfg_results),
-            "aggregated": avg_scores,
-        })
+        summary.append(
+            {
+                "config": cfg.model_dump(),
+                "n_queries": len(cfg_results),
+                "aggregated": avg_scores,
+            }
+        )
 
     report = {
         "experiment": "model_comparison",
@@ -233,7 +245,9 @@ def run_experiment(
     }
 
     # Persist
-    out_path = RESULTS_DIR / f"experiment_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+    out_path = (
+        RESULTS_DIR / f"experiment_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+    )
     out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info("Experiment report saved to %s", out_path)
 

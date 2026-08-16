@@ -1,13 +1,10 @@
 """Unit tests for the ingestion pipeline (no API key required)."""
 
 import hashlib
-from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 # Patch settings before importing pipeline
 import os
+from pathlib import Path
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 

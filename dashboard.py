@@ -297,7 +297,8 @@ st.markdown(
         <div class="agent-card">
             <div class="agent-icon">🥗</div>
             <div class="agent-name">NutritionAgent</div>
-            <div class="agent-desc">Restrições alimentares, alérgenos, calorias e dietas especiais</div>
+            <div class="agent-desc">Restrições alimentares, alérgenos,
+                        calorias e dietas especiais</div>
         </div>
         <div class="agent-card">
             <div class="agent-icon">🎯</div>
@@ -530,7 +531,7 @@ with tab_menu:
                 latency_badge = (
                     f' <span class="status-badge" style="background:rgba(255,75,75,0.12);'
                     f'color:#FF8E53;border-color:rgba(255,142,83,0.3);">'
-                    f'⚡ {latency:.0f}ms</span>'
+                    f"⚡ {latency:.0f}ms</span>"
                     if latency
                     else ""
                 )
