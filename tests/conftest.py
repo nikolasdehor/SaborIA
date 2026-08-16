@@ -1,9 +1,7 @@
 """Shared fixtures for SaborAI tests."""
 
 import os
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 # Ensure a dummy key exists so Settings() doesn't crash on import
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")

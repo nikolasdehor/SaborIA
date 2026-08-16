@@ -1,11 +1,7 @@
 """Unit tests for supervisor routing logic and agent orchestration."""
 
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
-
 import os
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 

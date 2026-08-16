@@ -139,9 +139,7 @@ async def query_stream_endpoint(req: QueryRequest):
                 except Exception as exc:
                     return name, f"[Erro no agente {name}: {exc}]"
 
-            tasks = {
-                asyncio.ensure_future(_invoke(n)): n for n in selected
-            }
+            tasks = {asyncio.ensure_future(_invoke(n)): n for n in selected}
             agent_outputs: dict[str, str] = {}
             for coro in asyncio.as_completed(tasks):
                 name, output = await coro
@@ -150,11 +148,14 @@ async def query_stream_endpoint(req: QueryRequest):
 
             # 3. Consolidate
             final = await supervisor._aconsolidate(req.query, agent_outputs)
-            yield _sse("response", {
-                "query": req.query,
-                "agents_used": selected,
-                "response": final,
-            })
+            yield _sse(
+                "response",
+                {
+                    "query": req.query,
+                    "agents_used": selected,
+                    "response": final,
+                },
+            )
 
             yield _sse("done", {})
         except Exception as exc:

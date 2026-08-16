@@ -4,8 +4,6 @@ import os
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
 
-import pytest
-
 
 class TestAgentInit:
     """Test that agents initialize correctly with expected configuration."""
