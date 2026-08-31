@@ -2,15 +2,16 @@
 
 > Sistema multi-agente com RAG para analise inteligente de cardapios de restaurantes.
 
-[![Live Demo](https://img.shields.io/badge/🍽️_Live_Demo-SaborAI-FF4B4B?style=for-the-badge)](https://saboria.streamlit.app)
+[![Site](https://img.shields.io/badge/🍽️_Site-SaborIA-CCFF45?style=for-the-badge)](https://saboria-site.vercel.app)
 
-[![CI](https://github.com/nikolasdehor/CardapIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/CardapIA/actions)
+[![CI](https://github.com/nikolasdehor/SaborIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/SaborIA/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3-purple.svg)](https://langchain.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **[Acesse o demo ao vivo →](https://saboria.streamlit.app)**
+> **[Conheça o projeto →](https://saboria-site.vercel.app)** · **[Abra o dashboard →](https://saboria.streamlit.app)**<br>
+> O provedor pode exigir autenticação. Para avaliar sem depender do demo, use o quickstart local e os testes do repositório.
 
 ---
 
@@ -130,8 +131,8 @@ Documentacao interativa disponivel em `http://localhost:8000/docs` (Swagger UI).
 ### 1. Clone e configure
 
 ```bash
-git clone https://github.com/nikolasdehor/CardapIA.git
-cd CardapIA
+git clone https://github.com/nikolasdehor/SaborIA.git
+cd SaborIA
 cp .env.example .env
 # Adicione sua OPENAI_API_KEY no .env
 ```
