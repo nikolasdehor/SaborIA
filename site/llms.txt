@@ -1,0 +1,21 @@
+# SaborIA
+
+> Projeto de código aberto para análise de cardápios com RAG e agentes especializados.
+
+## Recursos principais
+- Landing page: /
+- Privacidade: /privacy.html
+- Código-fonte e quickstart: https://github.com/nikolasdehor/SaborIA
+- Demonstração de terceiro: https://saboria.streamlit.app
+
+## Capacidades verificáveis no repositório
+- Ingestão de PDF e TXT com deduplicação por hash.
+- Agentes de nutrição, recomendação e qualidade coordenados por um supervisor.
+- API FastAPI, streaming SSE, retentativas e logs estruturados.
+- Testes de API, agentes, pipeline, roteamento e retentativas.
+
+## Limites
+- Não substitui orientação nutricional ou revisão humana.
+- Respostas generativas podem conter erros.
+- A demonstração hospedada externamente pode exigir autenticação.
+- Resultados variam conforme dados, consulta, modelo e configuração.

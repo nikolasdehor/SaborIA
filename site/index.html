@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SaborIA analisa cardápios com RAG e agentes especializados, com API, avaliações reproduzíveis e código aberto.">
+  <link rel="canonical" href="https://saboria-site.vercel.app/">
+  <title>SaborIA | Inteligência aplicada a cardápios</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#inicio" aria-label="SaborIA, início"><span>S</span>SaborIA</a>
+    <nav aria-label="Navegação principal">
+      <a href="#como-funciona">Como funciona</a><a href="#caso">Caso técnico</a><a href="#faq">FAQ</a>
+    </nav>
+    <a class="button small" href="https://github.com/nikolasdehor/SaborIA">Ver código</a>
+  </header>
+
+  <main id="inicio">
+    <section class="hero">
+      <p class="eyebrow">RAG multiagente para restaurantes</p>
+      <h1>Seu cardápio responde perguntas antes que o cliente desista.</h1>
+      <p class="lead">O SaborIA recebe cardápios em PDF ou texto, recupera o contexto relevante e coordena agentes de nutrição, recomendação e qualidade. Você pode inspecionar a API, executar os testes e medir cada resposta.</p>
+      <div class="actions">
+        <a class="button" href="https://saboria.streamlit.app">Abrir demonstração</a>
+        <a class="text-link" href="https://github.com/nikolasdehor/SaborIA#quickstart">Rodar localmente →</a>
+      </div>
+      <p class="notice">A demonstração é hospedada por terceiro e pode pedir login. O repositório e o quickstart continuam públicos.</p>
+    </section>
+
+    <section id="como-funciona" class="section">
+      <p class="eyebrow">Como funciona</p><h2>Uma resposta, três especialidades, rastreabilidade de ponta a ponta.</h2>
+      <div class="grid three">
+        <article><b>01</b><h3>Ingestão</h3><p>PDF e texto passam por segmentação, deduplicação por hash e indexação vetorial local.</p></article>
+        <article><b>02</b><h3>Roteamento</h3><p>O supervisor escolhe agentes de nutrição, recomendação ou qualidade e pode executá-los em paralelo.</p></article>
+        <article><b>03</b><h3>Avaliação</h3><p>A suíte mede relevância, aderência ao contexto, roteamento e cobertura de termos.</p></article>
+      </div>
+    </section>
+
+    <section id="caso" class="section case">
+      <div><p class="eyebrow">Caso técnico reproduzível</p><h2>Da pergunta ambígua à resposta verificável.</h2></div>
+      <div>
+        <h3>Cenário</h3><p>Um casal quer montar um combo vegano dentro de um orçamento, usando apenas os itens de um cardápio enviado.</p>
+        <h3>Execução</h3><p>O supervisor combina recomendação e nutrição; a recuperação limita o contexto ao cardápio indexado.</p>
+        <h3>Evidência</h3><p>O fluxo pode ser repetido pelos endpoints <code>/ingest/file</code> e <code>/query</code>. Os testes automatizados cobrem API, roteamento, pipeline e retentativas. Este é um caso do produto, não um depoimento de cliente.</p>
+      </div>
+    </section>
+
+    <section id="faq" class="section">
+      <p class="eyebrow">Perguntas frequentes</p><h2>O que vale saber antes de testar.</h2>
+      <div class="faq">
+        <details><summary>O SaborIA substitui orientação nutricional?</summary><p>Não. Ele organiza informações do cardápio e não substitui diagnóstico ou aconselhamento de um profissional habilitado.</p></details>
+        <details><summary>As respostas podem errar?</summary><p>Sim. Modelos generativos podem produzir respostas incorretas. A arquitetura reduz o risco com recuperação de contexto e avaliações, mas revisão humana continua necessária.</p></details>
+        <details><summary>Quais formatos entram no pipeline?</summary><p>A implementação atual recebe cardápios em PDF e TXT. Imagens e OCR permanecem no roadmap.</p></details>
+        <details><summary>Preciso de chave de API?</summary><p>Sim para os fluxos que chamam modelos e embeddings da OpenAI. A chave fica no ambiente local e não deve ser enviada ao repositório.</p></details>
+        <details><summary>Os dados ficam públicos?</summary><p>O armazenamento vetorial padrão é local. Chamadas a provedores de IA seguem as condições desses serviços; não envie dados sensíveis sem avaliar esse fluxo.</p></details>
+        <details><summary>Há resultados garantidos?</summary><p>Não. Qualidade, latência e custo variam conforme cardápio, consulta, modelo e configuração. O projeto fornece uma suíte para medir o seu cenário.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer><div><strong>SaborIA</strong><p>Projeto aberto para experimentar RAG, agentes e avaliação aplicada a cardápios.</p></div><div><a href="privacy.html">Privacidade</a><a href="llms.txt">llms.txt</a><a href="https://github.com/nikolasdehor/SaborIA">GitHub</a></div></footer>
+</body>
+</html>
