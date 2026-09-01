@@ -1,5 +1,5 @@
 """
-SaborAI API — FastAPI application.
+SaborIA API — FastAPI application.
 
 Endpoints:
   POST /ingest/file   — upload a menu PDF or TXT
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 APP_VERSION = "0.2.0"
 
 app = FastAPI(
-    title="SaborAI",
+    title="SaborIA",
     description="Multi-agent RAG system for restaurant menu analysis",
     version=APP_VERSION,
 )
@@ -73,7 +73,7 @@ class EvalRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "version": APP_VERSION, "app": "SaborAI"}
+    return {"status": "ok", "version": APP_VERSION, "app": "SaborIA"}
 
 
 @app.post("/ingest/file", summary="Upload a menu PDF or TXT file")

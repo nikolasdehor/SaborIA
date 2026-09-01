@@ -1,27 +1,28 @@
-# SaborAI
+# SaborIA
 
-> Sistema multi-agente com RAG para analise inteligente de cardapios de restaurantes.
+> Sistema multiagente com RAG para análise inteligente de cardápios de restaurantes.
 
-[![Live Demo](https://img.shields.io/badge/🍽️_Live_Demo-SaborAI-FF4B4B?style=for-the-badge)](https://saboria.streamlit.app)
+[![Site](https://img.shields.io/badge/🍽️_Site-SaborIA-CCFF45?style=for-the-badge)](https://saboria-site.vercel.app)
 
-[![CI](https://github.com/nikolasdehor/CardapIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/CardapIA/actions)
+[![CI](https://github.com/nikolasdehor/SaborIA/actions/workflows/ci.yml/badge.svg)](https://github.com/nikolasdehor/SaborIA/actions)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green.svg)](https://fastapi.tiangolo.com)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3-purple.svg)](https://langchain.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **[Acesse o demo ao vivo →](https://saboria.streamlit.app)**
+> **[Conheça o projeto →](https://saboria-site.vercel.app)** · **[Abra o dashboard →](https://saboria.streamlit.app)**<br>
+> O provedor pode exigir autenticação. O demo público compartilha uma coleção vetorial persistente entre sessões; use apenas dados não sensíveis. Para isolamento, execute o quickstart local.
 
 ---
 
-## O que e o SaborAI?
+## O que é o SaborIA?
 
-O SaborAI responde perguntas sobre cardapios de restaurantes usando uma **arquitetura multi-agente com RAG**. Um agente supervisor roteia cada query para um ou mais agentes especialistas, agrega as respostas e entrega um resultado estruturado.
+O SaborIA responde perguntas sobre cardápios de restaurantes usando uma **arquitetura multiagente com RAG**. Um agente supervisor roteia cada consulta para um ou mais agentes especialistas, agrega as respostas e entrega um resultado estruturado.
 
 **Casos de uso:**
-- *"Quais pratos sao adequados para veganos com intolerancia a gluten?"*
-- *"Monte um combo completo por ate R$60 para um casal."*
-- *"Avalie a qualidade das descricoes do cardapio e sugira melhorias para aumentar a conversao."*
+- *"Quais pratos são adequados para veganos com intolerância a glúten?"*
+- *"Monte um combo completo por até R$60 para um casal."*
+- *"Avalie a qualidade das descrições do cardápio e sugira melhorias para aumentar a conversão."*
 
 ---
 
@@ -63,12 +64,14 @@ SupervisorAgent  <- roteamento via LLM (GPT-4o-mini)
 
 ## Framework de Avaliacao
 
-O suite de evals mede 4 dimensoes por caso de teste:
+A suíte registra quatro dimensões por caso de teste. O campo `groundedness` é
+experimental: o juiz atual não recebe o contexto recuperado e, por isso, esse
+score não comprova que a resposta esteja ancorada na fonte.
 
 | Metrica | Metodo |
 |---|---|
 | **Relevancia** | GPT-4o-mini como juiz (0-1) |
-| **Groundedness** | GPT-4o-mini verifica se a resposta esta ancorada no contexto recuperado |
+| **Groundedness** | Score experimental sem o contexto recuperado; não usar como prova de ancoragem |
 | **Routing Accuracy** | Agentes esperados vs. agentes selecionados |
 | **Keyword Coverage** | Heuristica — termos esperados presentes na resposta |
 
@@ -130,8 +133,8 @@ Documentacao interativa disponivel em `http://localhost:8000/docs` (Swagger UI).
 ### 1. Clone e configure
 
 ```bash
-git clone https://github.com/nikolasdehor/CardapIA.git
-cd CardapIA
+git clone https://github.com/nikolasdehor/SaborIA.git
+cd SaborIA
 cp .env.example .env
 # Adicione sua OPENAI_API_KEY no .env
 ```
@@ -218,7 +221,7 @@ streamlit run dashboard.py
 ## Estrutura do Projeto
 
 ```
-CardapIA/
+SaborIA/
 ├── agents/
 │   ├── supervisor.py              # Roteamento, consolidacao e execucao paralela
 │   ├── nutrition.py               # Especialista em dietas e alergenicos
