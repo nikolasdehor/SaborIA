@@ -1,5 +1,5 @@
 """
-Structured logging and observability middleware for SaborAI.
+Structured logging and observability middleware for SaborIA.
 
 Adds request ID tracking, structured JSON log formatting, and timing
 for all API requests. This is essential for production debugging and

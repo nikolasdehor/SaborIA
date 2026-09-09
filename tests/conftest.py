@@ -1,4 +1,4 @@
-"""Shared fixtures for SaborAI tests."""
+"""Shared fixtures for SaborIA tests."""
 
 import os
 from pathlib import Path

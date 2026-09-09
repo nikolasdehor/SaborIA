@@ -25,7 +25,7 @@ from api.settings import settings
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """Voce e o SaborAI, um assistente inteligente de alimentacao
+SYSTEM_PROMPT = """Voce e o SaborIA, um assistente inteligente de alimentacao
 especializado em analisar cardapios de restaurantes. Voce tem acesso a tres
 agentes especialistas:
 

@@ -1,4 +1,4 @@
-"""Integration tests for SaborAI API."""
+"""Integration tests for SaborIA API."""
 
 from io import BytesIO
 
@@ -12,7 +12,7 @@ def test_health(api_client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "ok"
-    assert body["app"] == "SaborAI"
+    assert body["app"] == "SaborIA"
     assert "version" in body
 
 

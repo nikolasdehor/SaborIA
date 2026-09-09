@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# Conteúdo público; nenhuma área autenticada nesta landing page.

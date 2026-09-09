@@ -1,5 +1,5 @@
 """
-SaborAI Dashboard — Streamlit app for menu analysis and evaluation visualization.
+SaborIA Dashboard — Streamlit app for menu analysis and evaluation visualization.
 
 Run with:
     streamlit run dashboard.py
@@ -25,7 +25,7 @@ RESULTS_DIR = Path("data/eval_results")
 
 # ── Page Config (must be the first Streamlit command) ─────────────────────────
 
-st.set_page_config(page_title="SaborAI", page_icon="🍽️", layout="wide")
+st.set_page_config(page_title="SaborIA", page_icon="🍽️", layout="wide")
 
 # On Streamlit Cloud, .env doesn't exist — bridge st.secrets into env vars.
 if "OPENAI_API_KEY" not in os.environ:
@@ -274,7 +274,7 @@ st.markdown(
 st.markdown(
     """
     <div class="hero-banner">
-        <p class="hero-title">🍽️ SaborAI</p>
+        <p class="hero-title">🍽️ SaborIA</p>
         <p class="hero-subtitle">
             Sistema multi-agente com RAG para análise inteligente de cardápios de restaurantes
         </p>
